@@ -201,7 +201,7 @@ const CounterView: React.FC = () => {
             </Box>
 
             <Box sx={{ width: '100%', maxWidth: 300 }}>
-                <Typography sx={{ color: '#fff', mb: 1 }}>
+                <Typography sx={{ color: '#fff', mb: 1, textAlign: 'center' }}>
                     On-Queue Hours: {queueHours.toFixed(1)}
                 </Typography>
                 <StyledSlider
@@ -214,7 +214,7 @@ const CounterView: React.FC = () => {
             </Box>
 
             <Typography variant="caption" sx={{ color: '#fff' }}>
-                Last updated: {timeSinceLastUpdate}
+                {timeSinceLastUpdate}
             </Typography>
         </Box>
     );

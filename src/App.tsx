@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, Tab, Tabs } from '@mui/material';
+import { Box, Tab, Tabs, Fade } from '@mui/material';
 import CounterView from './components/CounterView';
 import HistoryView from './components/HistoryView';
 
@@ -42,43 +42,40 @@ const StyledTab = styled(Tab)({
   },
 });
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#60a5fa', // Light blue color for active elements
-    },
-    background: {
-      default: '#1c1c1e', // Darker background color
-      paper: 'rgba(44, 44, 46, 0.9)', // Slightly lighter for elevated surfaces
-    },
-  },
-  components: {
-    MuiTabs: {
-      styleOverrides: {
-        indicator: {
-          display: 'none', // Remove the underline indicator
-        },
-      },
-    },
-  },
-});
-
 function App() {
   const [value, setValue] = React.useState(0);
   const [selectedMonth, setSelectedMonth] = React.useState<string | null>(null);
   const [historyScrollPosition, setHistoryScrollPosition] = React.useState(0);
-  const contentRef = React.useRef<HTMLDivElement>(null);
+
+  const darkTheme = createTheme({
+    palette: {
+      mode: 'dark',
+      primary: {
+        main: '#60a5fa',
+      },
+      background: {
+        default: '#1c1c1e',
+        paper: 'rgba(44, 44, 46, 0.9)',
+      },
+    },
+    components: {
+      MuiTabs: {
+        styleOverrides: {
+          indicator: {
+            display: 'none',
+          },
+        },
+      },
+    },
+  });
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    // Save scroll position when leaving History tab
     if (value === 1) {
       setHistoryScrollPosition(window.scrollY);
     }
     setValue(newValue);
   };
 
-  // Restore scroll position when returning to History tab
   React.useEffect(() => {
     if (value === 1 && historyScrollPosition > 0) {
       window.scrollTo(0, historyScrollPosition);
@@ -102,6 +99,7 @@ function App() {
             mb: 2,
             display: 'flex',
             justifyContent: 'center',
+            alignItems: 'center',
             backdropFilter: 'blur(10px)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
             position: 'sticky',
@@ -117,9 +115,20 @@ function App() {
               <StyledTab label="History" />
             </StyledTabs>
           </Box>
-          <Box ref={contentRef} sx={{ p: 3, flex: 1 }}>
-            {value === 0 && <CounterView />}
-            {value === 1 && <HistoryView selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} />}
+          <Box sx={{ p: 3, flex: 1 }}>
+            <Fade in={value === 0} unmountOnExit>
+              <Box sx={{ display: value === 0 ? 'block' : 'none' }}>
+                <CounterView />
+              </Box>
+            </Fade>
+            <Fade in={value === 1} unmountOnExit>
+              <Box sx={{ display: value === 1 ? 'block' : 'none' }}>
+                <HistoryView 
+                  selectedMonth={selectedMonth} 
+                  setSelectedMonth={setSelectedMonth} 
+                />
+              </Box>
+            </Fade>
           </Box>
         </Box>
       </Router>

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Box, List, ListItem, ListItemText, Typography, IconButton } from '@mui/material';
+import { Box, List, ListItem, ListItemText, Typography, IconButton, Menu, MenuItem } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import EditIcon from '@mui/icons-material/Edit';
 import { DailyStats } from '../types/DailyStats';
+import MonthlyStats from './MonthlyStats';
+import EditDayDialog from './EditDayDialog';
+import { saveAs } from 'file-saver';
 
 interface DayData extends DailyStats {
     date: string;
@@ -19,6 +25,9 @@ interface HistoryViewProps {
 
 const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMonth }) => {
     const [monthlyData, setMonthlyData] = useState<{ [month: string]: MonthData }>({});
+    const [editDay, setEditDay] = useState<{ day: string, data: DailyStats } | null>(null);
+    const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+    const [selectedDay, setSelectedDay] = useState<string | null>(null);
     const currentYear = new Date().getFullYear();
 
     // Load and save data when counter changes
@@ -42,6 +51,50 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
 
     const handleBack = () => {
         setSelectedMonth(null);
+    };
+
+    const handleEdit = (day: string, data: DailyStats) => {
+        setEditDay({ day, data });
+        setMenuAnchor(null);
+    };
+
+    const handleSaveEdit = (newData: DailyStats) => {
+        if (selectedMonth && editDay) {
+            const updatedMonthData = {
+                ...monthlyData,
+                [selectedMonth]: {
+                    ...monthlyData[selectedMonth],
+                    [editDay.day]: {
+                        ...monthlyData[selectedMonth][editDay.day],
+                        ...newData,
+                    },
+                },
+            };
+            setMonthlyData(updatedMonthData);
+            localStorage.setItem('dailyStats', JSON.stringify(updatedMonthData));
+        }
+    };
+
+    const handleExport = () => {
+        if (selectedMonth && monthlyData[selectedMonth]) {
+            const data = Object.entries(monthlyData[selectedMonth])
+                .map(([day, stats]) => ({
+                    date: `${selectedMonth} ${day}, ${currentYear}`,
+                    hours: stats.hours,
+                    interactions: stats.interactions,
+                    pace: stats.pace,
+                }))
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            const csv = [
+                ['Date', 'Hours', 'Interactions', 'Pace'],
+                ...data.map(row => [row.date, row.hours, row.interactions, row.pace]),
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            saveAs(blob, `${selectedMonth}_${currentYear}_stats.csv`);
+        }
+        setMenuAnchor(null);
     };
 
     const getExpectedInteractions = (hours: number, pace: number) => {
@@ -108,32 +161,53 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                             <Typography sx={{ color: '#888', flex: '1 1 33%', textAlign: 'center' }}>
                                 {data ? `${data.hours.toFixed(1)}h` : '-'}
                             </Typography>
-                            {data ? (
-                                <Box
-                                    sx={{
-                                        width: 36,
-                                        height: 36,
-                                        borderRadius: '50%',
-                                        backgroundColor: data.interactions >= getExpectedInteractions(data.hours, data.pace) 
-                                            ? '#4ade80' 
-                                            : '#ef4444',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: '#fff',
-                                        flex: '0 0 auto',
-                                    }}
-                                >
-                                    {data.interactions}
-                                </Box>
-                            ) : (
-                                <Box sx={{ width: 36, flex: '0 0 auto', textAlign: 'center', color: '#888' }}>
-                                    -
-                                </Box>
-                            )}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                {data ? (
+                                    <Box
+                                        sx={{
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: '50%',
+                                            backgroundColor: data.interactions >= getExpectedInteractions(data.hours, data.pace) 
+                                                ? '#4ade80' 
+                                                : '#ef4444',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#fff',
+                                            flex: '0 0 auto',
+                                        }}
+                                    >
+                                        {data.interactions}
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ width: 36, flex: '0 0 auto', textAlign: 'center', color: '#888' }}>
+                                        -
+                                    </Box>
+                                )}
+                                {data && (
+                                    <IconButton
+                                        size="small"
+                                        onClick={(e) => {
+                                            setSelectedDay(day);
+                                            setMenuAnchor(e.currentTarget);
+                                        }}
+                                        sx={{ color: '#888' }}
+                                    >
+                                        <MoreVertIcon />
+                                    </IconButton>
+                                )}
+                            </Box>
                         </ListItem>
                     ))}
                 </List>
+                {selectedMonth && monthlyData[selectedMonth] && (
+                    <MonthlyStats
+                        data={monthlyData[selectedMonth]}
+                        month={selectedMonth}
+                        year={currentYear}
+                    />
+                )}
             </>
         );
     };
@@ -147,9 +221,27 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
         <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto', mt: -4 }}>
             {selectedMonth ? (
                 <>
-                    <Box sx={{ mb: 2 }}>
+                    <Box sx={{ 
+                        mb: 2, 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        px: 1
+                    }}>
                         <IconButton onClick={handleBack} sx={{ color: '#fff' }}>
                             <ArrowBackIcon />
+                        </IconButton>
+                        <IconButton 
+                            onClick={handleExport}
+                            sx={{ 
+                                color: '#fff',
+                                '&:hover': {
+                                    transform: 'translateY(-1px)',
+                                },
+                                transition: 'transform 0.2s ease'
+                            }}
+                        >
+                            <FileDownloadIcon />
                         </IconButton>
                     </Box>
                     {renderDailyView(monthlyData[selectedMonth] || {})}
@@ -172,7 +264,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                         width: '100%', 
                         bgcolor: 'background.paper',
                         '& .MuiListItem-root': {
-                            py: 1 // Further reduce padding for each list item
+                            py: 1
                         }
                     }}>
                         {months.map((month) => (
@@ -187,11 +279,51 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                                     },
                                 }}
                             >
-                                <ListItemText primary={month} sx={{ color: '#fff' }} />
+                                <ListItemText 
+                                    primary={month} 
+                                    sx={{ 
+                                        color: '#fff',
+                                        '& .MuiTypography-root': {
+                                            transition: 'transform 0.2s ease',
+                                        },
+                                        '&:hover .MuiTypography-root': {
+                                            transform: 'translateX(4px)',
+                                        },
+                                    }} 
+                                />
                             </ListItem>
                         ))}
                     </List>
                 </>
+            )}
+            <Menu
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={() => setMenuAnchor(null)}
+                PaperProps={{
+                    sx: {
+                        bgcolor: 'background.paper',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                    }
+                }}
+            >
+                <MenuItem 
+                    onClick={() => selectedDay && monthlyData[selectedMonth!]?.[selectedDay] && 
+                        handleEdit(selectedDay, monthlyData[selectedMonth!][selectedDay])}
+                    sx={{ color: '#fff' }}
+                >
+                    <EditIcon sx={{ mr: 1, fontSize: 20 }} />
+                    Edit Entry
+                </MenuItem>
+            </Menu>
+            {editDay && (
+                <EditDayDialog
+                    open={Boolean(editDay)}
+                    onClose={() => setEditDay(null)}
+                    data={editDay.data}
+                    date={`${selectedMonth} ${editDay.day}`}
+                    onSave={handleSaveEdit}
+                />
             )}
         </Box>
     );
