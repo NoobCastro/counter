@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Button, Slider, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -81,15 +81,14 @@ const CounterView: React.FC = () => {
         localStorage.setItem('selectedPace', selectedPace.toString());
     }, [counter, queueHours, selectedPace]);
 
-    const updateCounterForPace = (pace: number) => {
+    const updateCounterForPace = useCallback((pace: number) => {
         const baseInteractionsFor8Hours = 36;
         setMaxCount(Math.floor(baseInteractionsFor8Hours * (queueHours / 8.0) * (pace / 4.5)));
-    };
+    }, [queueHours]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         updateCounterForPace(selectedPace);
-    }, [queueHours, selectedPace]);
+    }, [updateCounterForPace, selectedPace]);
 
     const updateDailyStats = (newCount: number) => {
         const today = new Date();
