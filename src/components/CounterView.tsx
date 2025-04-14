@@ -86,6 +86,7 @@ const CounterView: React.FC = () => {
         setMaxCount(Math.floor(baseInteractionsFor8Hours * (queueHours / 8.0) * (pace / 4.5)));
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         updateCounterForPace(selectedPace);
     }, [queueHours, selectedPace]);
