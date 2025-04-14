@@ -39,19 +39,26 @@ const StyledSlider = styled(Slider)(({ theme }) => ({
 }));
 
 const CounterView: React.FC = () => {
-    const [counter, setCounter] = useState(() => 
-        Number(localStorage.getItem('counter')) || 0
-    );
-    const [queueHours, setQueueHours] = useState(() => 
-        Number(localStorage.getItem('queueHours')) || 8
-    );
-    const [selectedPace, setSelectedPace] = useState(() => 
-        Number(localStorage.getItem('selectedPace')) || 4.5
-    );
+    const [counter, setCounter] = useState(() => Number(localStorage.getItem('counter')) || 0);
+    const [queueHours, setQueueHours] = useState(() => Number(localStorage.getItem('queueHours')) || 8);
+    const [selectedPace, setSelectedPace] = useState(() => Number(localStorage.getItem('selectedPace')) || 4.5);
     const [paceInputValue, setPaceInputValue] = useState(selectedPace.toString());
     const [maxCount, setMaxCount] = useState(36);
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
     const [timeSinceLastUpdate, setTimeSinceLastUpdate] = useState('0 seconds ago');
+
+    useEffect(() => {
+        const lastDate = localStorage.getItem('lastDate');
+        const today = new Date().toDateString();
+        
+        if (lastDate !== today) {
+            localStorage.setItem('lastDate', today);
+            localStorage.setItem('counter', '0');
+            localStorage.setItem('queueHours', '8');
+            setCounter(0);
+            setQueueHours(8);
+        }
+    }, []);
 
     useEffect(() => {
         const timer = setInterval(() => {
