@@ -284,8 +284,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
     }
 
     return (
-        <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto', mt: -4 }}>
-            {selectedMonth ? (
+        <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}>
+            {selectedMonth && (
                 <>
                     <Box sx={{ 
                         mb: 2, 
@@ -310,54 +310,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                             <FileDownloadIcon />
                         </IconButton>
                     </Box>
-                    {renderDailyView(monthlyData[currentYear][selectedMonth] || {})}
-                </>
-            ) : (
-                <>
-                    <Typography 
-                        variant="h4" 
-                        sx={{ 
-                            color: '#fff', 
-                            mb: 1,
-                            mt: 0,
-                            textAlign: 'center',
-                            fontWeight: 'normal'
-                        }}
-                    >
-                        {currentYear}
-                    </Typography>
-                    <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                        {months.map((month) => {
-                            const monthData = monthlyData[currentYear]?.[month] || {};
-                            const totalInteractions = Object.values(monthData).reduce((sum, day) => sum + day.interactions, 0);
-                            const totalHours = Object.values(monthData).reduce((sum, day) => sum + day.hours, 0);
-                            const hasData = Object.keys(monthData).length > 0;
-
-                            return (
-                                <ListItem
-                                    component="div"
-                                    key={month}
-                                    onClick={() => setSelectedMonth(month)}
-                                    sx={{
-                                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                                        py: 2,
-                                        opacity: hasData ? 1 : 0.5,
-                                        cursor: 'pointer',
-                                        '&:hover': {
-                                            bgcolor: 'rgba(255, 255, 255, 0.05)',
-                                        },
-                                    }}
-                                >
-                                    <ListItemText
-                                        primary={month}
-                                        secondary={hasData ? `${totalHours.toFixed(1)}h • ${totalInteractions} interactions` : 'No data'}
-                                        primaryTypographyProps={{ sx: { color: '#fff' } }}
-                                        secondaryTypographyProps={{ sx: { color: '#888' } }}
-                                    />
-                                </ListItem>
-                            );
-                        })}
-                    </List>
+                    {renderDailyView(monthlyData[currentYear]?.[selectedMonth] || {})}
                 </>
             )}
             <Menu
