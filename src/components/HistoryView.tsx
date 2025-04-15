@@ -82,16 +82,25 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
         if (selectedMonth && monthlyData[currentYear]?.[selectedMonth]) {
             const data = Object.entries(monthlyData[currentYear][selectedMonth])
                 .map(([day, stats]) => ({
-                    date: `${selectedMonth} ${day}, ${currentYear}`,
-                    hours: stats.hours,
+                    date: `${selectedMonth} ${day}`,
+                    hours: stats.hours.toFixed(1),
                     interactions: stats.interactions,
-                    pace: stats.pace,
+                    pace: stats.pace.toFixed(1)
                 }))
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                .sort((a, b) => {
+                    const dateA = new Date(`${a.date}, ${currentYear}`);
+                    const dateB = new Date(`${b.date}, ${currentYear}`);
+                    return dateA.getTime() - dateB.getTime();
+                });
 
             const csv = [
                 ['Date', 'Hours', 'Interactions', 'Pace'],
-                ...data.map(row => [row.date, row.hours, row.interactions, row.pace]),
+                ...data.map(row => [
+                    row.date,
+                    row.hours,
+                    row.interactions,
+                    row.pace
+                ]),
             ].map(row => row.join(',')).join('\n');
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
