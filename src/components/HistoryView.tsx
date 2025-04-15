@@ -235,40 +235,48 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
     if (!selectedMonth) {
         return (
             <Box>
-                <Typography variant="h6" sx={{ mb: 3, color: '#fff' }}>
-                    Select Month
+                <Typography 
+                    variant="h4" 
+                    sx={{ 
+                        color: '#fff', 
+                        mb: 1,
+                        mt: 0,
+                        textAlign: 'center',
+                        fontWeight: 'normal'
+                    }}
+                >
+                    {currentYear}
                 </Typography>
-                <List>
+                <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
                     {months.map((month) => {
-                        const hasData = monthlyData[currentYear]?.[month] && 
-                            Object.keys(monthlyData[currentYear][month]).length > 0;
-                        
-                        return hasData ? (
+                        const monthData = monthlyData[currentYear]?.[month] || {};
+                        const totalInteractions = Object.values(monthData).reduce((sum, day) => sum + day.interactions, 0);
+                        const totalHours = Object.values(monthData).reduce((sum, day) => sum + day.hours, 0);
+                        const hasData = Object.keys(monthData).length > 0;
+
+                        return (
                             <ListItem
                                 component="div"
                                 key={month}
                                 onClick={() => setSelectedMonth(month)}
                                 sx={{
-                                    borderRadius: 2,
-                                    mb: 1,
-                                    bgcolor: 'background.paper',
+                                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                    py: 2,
+                                    opacity: hasData ? 1 : 0.5,
                                     cursor: 'pointer',
                                     '&:hover': {
-                                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                        bgcolor: 'rgba(255, 255, 255, 0.05)',
                                     },
                                 }}
                             >
-                                <ListItemText 
-                                    primary={month} 
-                                    sx={{ 
-                                        '& .MuiListItemText-primary': { 
-                                            color: '#fff',
-                                            fontWeight: 500
-                                        } 
-                                    }}
+                                <ListItemText
+                                    primary={month}
+                                    secondary={hasData ? `${totalHours.toFixed(1)}h • ${totalInteractions} interactions` : 'No data'}
+                                    primaryTypographyProps={{ sx: { color: '#fff' } }}
+                                    secondaryTypographyProps={{ sx: { color: '#888' } }}
                                 />
                             </ListItem>
-                        ) : null;
+                        );
                     })}
                 </List>
             </Box>
@@ -331,12 +339,12 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                                     key={month}
                                     onClick={() => setSelectedMonth(month)}
                                     sx={{
-                                        borderRadius: 2,
-                                        mb: 1,
-                                        bgcolor: 'background.paper',
+                                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                        py: 2,
+                                        opacity: hasData ? 1 : 0.5,
                                         cursor: 'pointer',
                                         '&:hover': {
-                                            bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                            bgcolor: 'rgba(255, 255, 255, 0.05)',
                                         },
                                     }}
                                 >
