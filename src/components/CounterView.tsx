@@ -51,37 +51,41 @@ const CounterView: React.FC = () => {
         const lastDate = localStorage.getItem('lastDate');
         const today = new Date().toDateString();
         
-        // Migrate existing data to new format
-        const migrateExistingData = () => {
+        // Force reset data structure
+        const resetDataStructure = () => {
             const saved = localStorage.getItem('dailyStats');
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
                     const currentYear = new Date().getFullYear();
-                    let needsMigration = false;
-
-                    // Check if data is in old format (directly using months as keys)
+                    
+                    // Force restructure the data
+                    const newData: Record<string, Record<string, any>> = {};
                     for (const key in data) {
-                        if (typeof data[key] === 'object' && !data[key].hasOwnProperty(currentYear)) {
-                            needsMigration = true;
-                            break;
+                        if (typeof data[key] === 'object') {
+                            if (!data[key].hasOwnProperty(currentYear)) {
+                                // Old format - migrate it
+                                newData[currentYear.toString()] = { ...data };
+                                break;
+                            } else {
+                                // Already in new format
+                                newData[key] = data[key];
+                            }
                         }
                     }
-
-                    if (needsMigration) {
-                        const migratedData = {
-                            [currentYear]: data
-                        };
-                        localStorage.setItem('dailyStats', JSON.stringify(migratedData));
-                        console.log('Data migrated to new format');
-                    }
+                    
+                    localStorage.setItem('dailyStats', JSON.stringify(newData));
+                    console.log('Data structure reset complete');
+                    
+                    // Force refresh the page to ensure clean state
+                    window.location.reload();
                 } catch (e) {
-                    console.error('Error migrating data:', e);
+                    console.error('Error resetting data structure:', e);
                 }
             }
         };
 
-        migrateExistingData();
+        resetDataStructure();
         
         if (lastDate !== today) {
             localStorage.setItem('lastDate', today);
