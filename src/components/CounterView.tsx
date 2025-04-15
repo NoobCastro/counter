@@ -51,6 +51,38 @@ const CounterView: React.FC = () => {
         const lastDate = localStorage.getItem('lastDate');
         const today = new Date().toDateString();
         
+        // Migrate existing data to new format
+        const migrateExistingData = () => {
+            const saved = localStorage.getItem('dailyStats');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    const currentYear = new Date().getFullYear();
+                    let needsMigration = false;
+
+                    // Check if data is in old format (directly using months as keys)
+                    for (const key in data) {
+                        if (typeof data[key] === 'object' && !data[key].hasOwnProperty(currentYear)) {
+                            needsMigration = true;
+                            break;
+                        }
+                    }
+
+                    if (needsMigration) {
+                        const migratedData = {
+                            [currentYear]: data
+                        };
+                        localStorage.setItem('dailyStats', JSON.stringify(migratedData));
+                        console.log('Data migrated to new format');
+                    }
+                } catch (e) {
+                    console.error('Error migrating data:', e);
+                }
+            }
+        };
+
+        migrateExistingData();
+        
         if (lastDate !== today) {
             localStorage.setItem('lastDate', today);
             localStorage.setItem('counter', '0');
