@@ -81,29 +81,37 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
     const handleExport = () => {
         if (selectedMonth && monthlyData[currentYear]?.[selectedMonth]) {
             const data = Object.entries(monthlyData[currentYear][selectedMonth])
-                .map(([day, stats]) => ({
-                    date: `${selectedMonth} ${day}`,
-                    hours: stats.hours.toFixed(1),
-                    interactions: stats.interactions,
-                    pace: stats.pace.toFixed(1)
-                }))
+                .map(([day, stats]) => {
+                    // Extract just the day number from the date
+                    const dayNum = day.replace(/^0+/, ''); // Remove leading zeros
+                    return {
+                        date: `${selectedMonth} ${dayNum}`,  // Format as "Month Day"
+                        hours: stats.hours,
+                        interactions: stats.interactions,
+                        pace: stats.pace
+                    };
+                })
                 .sort((a, b) => {
                     const dateA = new Date(`${a.date}, ${currentYear}`);
                     const dateB = new Date(`${b.date}, ${currentYear}`);
                     return dateA.getTime() - dateB.getTime();
                 });
 
+            // Create CSV with explicit column order
+            const headers = ['Date', 'Hours', 'Interactions', 'Pace'];
+            const rows = data.map(row => [
+                row.date,                    // Date column
+                row.hours.toFixed(1),        // Hours column
+                row.interactions.toString(), // Interactions column
+                row.pace.toFixed(1)         // Pace column
+            ]);
+
             const csv = [
-                ['Date', 'Hours', 'Interactions', 'Pace'],
-                ...data.map(row => [
-                    row.date,
-                    row.hours,
-                    row.interactions,
-                    row.pace
-                ]),
+                headers,
+                ...rows
             ].map(row => row.join(',')).join('\n');
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             saveAs(blob, `${selectedMonth}_${currentYear}_stats.csv`);
         }
         setMenuAnchor(null);
