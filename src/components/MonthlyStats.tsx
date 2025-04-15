@@ -3,6 +3,7 @@ import { Box, Typography, Paper } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { DailyStats } from '../types/DailyStats';
+import { months } from '../constants';
 
 interface MonthlyStatsProps {
   data: { [day: string]: DailyStats };
@@ -96,10 +97,5 @@ const MonthlyStats: React.FC<MonthlyStatsProps> = ({ data, month, year }) => {
     </Box>
   );
 };
-
-const months = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
 
 export default MonthlyStats; 

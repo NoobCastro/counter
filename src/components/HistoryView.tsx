@@ -8,6 +8,7 @@ import { DailyStats } from '../types/DailyStats';
 import MonthlyStats from './MonthlyStats';
 import EditDayDialog from './EditDayDialog';
 import { saveAs } from 'file-saver';
+import { months } from '../constants';
 
 interface DayData extends DailyStats {
     date: string;
@@ -231,10 +232,48 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
         );
     };
 
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+    if (!selectedMonth) {
+        return (
+            <Box>
+                <Typography variant="h6" sx={{ mb: 3, color: '#fff' }}>
+                    Select Month
+                </Typography>
+                <List>
+                    {months.map((month) => {
+                        const hasData = monthlyData[currentYear]?.[month] && 
+                            Object.keys(monthlyData[currentYear][month]).length > 0;
+                        
+                        return hasData ? (
+                            <ListItem
+                                component="div"
+                                key={month}
+                                onClick={() => setSelectedMonth(month)}
+                                sx={{
+                                    borderRadius: 2,
+                                    mb: 1,
+                                    bgcolor: 'background.paper',
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    },
+                                }}
+                            >
+                                <ListItemText 
+                                    primary={month} 
+                                    sx={{ 
+                                        '& .MuiListItemText-primary': { 
+                                            color: '#fff',
+                                            fontWeight: 500
+                                        } 
+                                    }}
+                                />
+                            </ListItem>
+                        ) : null;
+                    })}
+                </List>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto', mt: -4 }}>
@@ -288,13 +327,17 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
 
                             return (
                                 <ListItem
+                                    component="div"
                                     key={month}
                                     onClick={() => setSelectedMonth(month)}
                                     sx={{
+                                        borderRadius: 2,
+                                        mb: 1,
+                                        bgcolor: 'background.paper',
                                         cursor: 'pointer',
-                                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                                        py: 2,
-                                        opacity: hasData ? 1 : 0.5,
+                                        '&:hover': {
+                                            bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                        },
                                     }}
                                 >
                                     <ListItemText
