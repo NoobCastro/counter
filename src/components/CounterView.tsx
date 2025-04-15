@@ -53,6 +53,11 @@ const CounterView: React.FC = () => {
         
         // Force reset data structure
         const resetDataStructure = () => {
+            const migrationComplete = localStorage.getItem('dataStructureMigrated2025');
+            if (migrationComplete === 'true') {
+                return; // Skip if already migrated
+            }
+
             const saved = localStorage.getItem('dailyStats');
             if (saved) {
                 try {
@@ -75,9 +80,10 @@ const CounterView: React.FC = () => {
                     }
                     
                     localStorage.setItem('dailyStats', JSON.stringify(newData));
+                    localStorage.setItem('dataStructureMigrated2025', 'true');
                     console.log('Data structure reset complete');
                     
-                    // Force refresh the page to ensure clean state
+                    // Force refresh the page one time only
                     window.location.reload();
                 } catch (e) {
                     console.error('Error resetting data structure:', e);
