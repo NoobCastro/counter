@@ -85,10 +85,10 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                     // Extract just the day number from the date
                     const dayNum = day.replace(/^0+/, ''); // Remove leading zeros
                     return {
-                        date: `${selectedMonth} ${dayNum}`,  // Format as "Month Day"
-                        hours: stats.hours,
+                        date: `${selectedMonth} ${dayNum}`,
+                        hours: Number(stats.hours) || 0, // Ensure hours is a number
                         interactions: stats.interactions,
-                        pace: stats.pace
+                        pace: Number(stats.pace) || 0 // Ensure pace is a number
                     };
                 })
                 .sort((a, b) => {
@@ -99,18 +99,17 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
 
             // Create CSV with explicit column order
             const headers = ['Date', 'Hours', 'Interactions', 'Pace'];
-            const rows = data.map(row => [
-                row.date,                    // Date column
-                row.hours.toFixed(1),        // Hours column
-                row.interactions.toString(), // Interactions column
-                row.pace.toFixed(1)         // Pace column
-            ]);
+            const rows = data.map(row => {
+                const formattedRow = [
+                    row.date,
+                    row.hours.toFixed(1),
+                    row.interactions,
+                    row.pace.toFixed(1)
+                ];
+                return formattedRow.join(',');
+            });
 
-            const csv = [
-                headers,
-                ...rows
-            ].map(row => row.join(',')).join('\n');
-
+            const csv = [headers.join(','), ...rows].join('\n');
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             saveAs(blob, `${selectedMonth}_${currentYear}_stats.csv`);
         }
