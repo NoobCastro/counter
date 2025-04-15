@@ -92,6 +92,7 @@ const CounterView: React.FC = () => {
 
     const updateDailyStats = (newCount: number) => {
         const today = new Date();
+        const year = today.getFullYear();
         const month = today.toLocaleString('default', { month: 'long' });
         const day = today.getDate().toString().padStart(2, '0');
         const monthAbbr = today.toLocaleString('default', { month: 'short' });
@@ -99,11 +100,14 @@ const CounterView: React.FC = () => {
         const saved = localStorage.getItem('dailyStats') || '{}';
         const dailyStats = JSON.parse(saved);
 
-        if (!dailyStats[month]) {
-            dailyStats[month] = {};
+        if (!dailyStats[year]) {
+            dailyStats[year] = {};
+        }
+        if (!dailyStats[year][month]) {
+            dailyStats[year][month] = {};
         }
 
-        dailyStats[month][day] = {
+        dailyStats[year][month][day] = {
             date: `${monthAbbr} ${day}`,
             hours: queueHours,
             interactions: newCount,

@@ -24,7 +24,7 @@ interface HistoryViewProps {
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMonth }) => {
-    const [monthlyData, setMonthlyData] = useState<{ [month: string]: MonthData }>({});
+    const [monthlyData, setMonthlyData] = useState<{ [year: string]: { [month: string]: MonthData } }>({});
     const [editDay, setEditDay] = useState<{ day: string, data: DailyStats } | null>(null);
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -62,11 +62,14 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
         if (selectedMonth && editDay) {
             const updatedMonthData = {
                 ...monthlyData,
-                [selectedMonth]: {
-                    ...monthlyData[selectedMonth],
-                    [editDay.day]: {
-                        ...monthlyData[selectedMonth][editDay.day],
-                        ...newData,
+                [currentYear]: {
+                    ...monthlyData[currentYear],
+                    [selectedMonth]: {
+                        ...monthlyData[currentYear]?.[selectedMonth],
+                        [editDay.day]: {
+                            ...monthlyData[currentYear]?.[selectedMonth]?.[editDay.day],
+                            ...newData,
+                        },
                     },
                 },
             };
@@ -76,8 +79,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
     };
 
     const handleExport = () => {
-        if (selectedMonth && monthlyData[selectedMonth]) {
-            const data = Object.entries(monthlyData[selectedMonth])
+        if (selectedMonth && monthlyData[currentYear]?.[selectedMonth]) {
+            const data = Object.entries(monthlyData[currentYear][selectedMonth])
                 .map(([day, stats]) => ({
                     date: `${selectedMonth} ${day}, ${currentYear}`,
                     hours: stats.hours,
@@ -201,9 +204,9 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                         </ListItem>
                     ))}
                 </List>
-                {selectedMonth && monthlyData[selectedMonth] && (
+                {selectedMonth && monthlyData[currentYear]?.[selectedMonth] && (
                     <MonthlyStats
-                        data={monthlyData[selectedMonth]}
+                        data={monthlyData[currentYear][selectedMonth]}
                         month={selectedMonth}
                         year={currentYear}
                     />
@@ -244,7 +247,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                             <FileDownloadIcon />
                         </IconButton>
                     </Box>
-                    {renderDailyView(monthlyData[selectedMonth] || {})}
+                    {renderDailyView(monthlyData[currentYear][selectedMonth] || {})}
                 </>
             ) : (
                 <>
@@ -260,39 +263,33 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                     >
                         {currentYear}
                     </Typography>
-                    <List sx={{ 
-                        width: '100%', 
-                        bgcolor: 'background.paper',
-                        '& .MuiListItem-root': {
-                            py: 1
-                        }
-                    }}>
-                        {months.map((month) => (
-                            <ListItem
-                                key={month}
-                                onClick={() => setSelectedMonth(month)}
-                                sx={{
-                                    cursor: 'pointer',
-                                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                                    '&:hover': {
-                                        bgcolor: 'rgba(255, 255, 255, 0.05)',
-                                    },
-                                }}
-                            >
-                                <ListItemText 
-                                    primary={month} 
-                                    sx={{ 
-                                        color: '#fff',
-                                        '& .MuiTypography-root': {
-                                            transition: 'transform 0.2s ease',
-                                        },
-                                        '&:hover .MuiTypography-root': {
-                                            transform: 'translateX(4px)',
-                                        },
-                                    }} 
-                                />
-                            </ListItem>
-                        ))}
+                    <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+                        {months.map((month) => {
+                            const monthData = monthlyData[currentYear]?.[month] || {};
+                            const totalInteractions = Object.values(monthData).reduce((sum, day) => sum + day.interactions, 0);
+                            const totalHours = Object.values(monthData).reduce((sum, day) => sum + day.hours, 0);
+                            const hasData = Object.keys(monthData).length > 0;
+
+                            return (
+                                <ListItem
+                                    key={month}
+                                    onClick={() => setSelectedMonth(month)}
+                                    sx={{
+                                        cursor: 'pointer',
+                                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                        py: 2,
+                                        opacity: hasData ? 1 : 0.5,
+                                    }}
+                                >
+                                    <ListItemText
+                                        primary={month}
+                                        secondary={hasData ? `${totalHours.toFixed(1)}h • ${totalInteractions} interactions` : 'No data'}
+                                        primaryTypographyProps={{ sx: { color: '#fff' } }}
+                                        secondaryTypographyProps={{ sx: { color: '#888' } }}
+                                    />
+                                </ListItem>
+                            );
+                        })}
                     </List>
                 </>
             )}
@@ -308,8 +305,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({ selectedMonth, setSelectedMon
                 }}
             >
                 <MenuItem 
-                    onClick={() => selectedDay && monthlyData[selectedMonth!]?.[selectedDay] && 
-                        handleEdit(selectedDay, monthlyData[selectedMonth!][selectedDay])}
+                    onClick={() => selectedDay && monthlyData[currentYear]?.[selectedMonth!]?.[selectedDay] && 
+                        handleEdit(selectedDay, monthlyData[currentYear][selectedMonth!][selectedDay])}
                     sx={{ color: '#fff' }}
                 >
                     <EditIcon sx={{ mr: 1, fontSize: 20 }} />
